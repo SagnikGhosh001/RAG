@@ -4,9 +4,13 @@ import { chunkText } from "./chunk.ts";
 import { database } from "./store_docs.ts";
 import { chatWithOllama } from "./chat.ts";
 import { buildPrompt } from "./prompt.ts";
+import { serveStatic } from "hono/deno";
+import { logger } from "hono/logger";
 
 export const createApp = () => {
   const app = new Hono();
+
+  app.use(logger());
 
   app.post("/add-doc", async (c) => {
     const payload = await c.req.json();
@@ -26,10 +30,13 @@ export const createApp = () => {
     const question = payload.question;
     const searchedResult = await search(question);
     const context = searchedResult.map((s) => s.text);
+
     const finalPrompt = buildPrompt(question, context);
     const answer = await chatWithOllama(finalPrompt);
     return c.json({ success: true, data: answer });
   });
+
+  app.get("*", serveStatic({ root: "./public" }));
 
   return app;
 };
