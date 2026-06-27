@@ -1,115 +1,103 @@
-const API_URL = "";
+const loadDocuments = async () => {
+  const chunksContainer = document.getElementById("chunks");
+  const response = await fetch(`/get-doc`);
+  const data = await response.json();
 
-const chunksContainer = document.getElementById("chunks");
-const chat = document.getElementById("chat");
-const questionInput = document.getElementById("question");
-const documentInput = document.getElementById("docInput");
+  chunksContainer.innerHTML = "";
 
-document
-    .getElementById("addDocBtn")
-    .addEventListener("click", addDocument);
+  data.database.forEach((chunk, index) => {
+    const div = document.createElement("div");
+    div.className = "chunk";
 
-document
-    .getElementById("askBtn")
-    .addEventListener("click", askQuestion);
-
-questionInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-        askQuestion();
-    }
-});
-
-async function loadDocuments() {
-
-    const response = await fetch(`${API_URL}/get-doc`);
-    const data = await response.json();
-
-    chunksContainer.innerHTML = "";
-
-    data.database.forEach((chunk, index) => {
-
-        const div = document.createElement("div");
-        div.className = "chunk";
-
-        div.innerHTML = `
+    div.innerHTML = `
             <strong>Chunk ${index + 1}</strong>
             <hr style="margin:8px 0">
             ${chunk.text}
         `;
 
-        chunksContainer.appendChild(div);
+    chunksContainer.appendChild(div);
+  });
+};
 
-    });
+const addDocument = async () => {
+  const documentInput = document.getElementById("docInput");
+  const doc = documentInput.value.trim();
 
-}
+  if (!doc) {
+    alert("Please enter a document.");
+    return;
+  }
 
-async function addDocument() {
+  await fetch(`/add-doc`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ doc }),
+  });
 
-    const doc = documentInput.value.trim();
+  documentInput.value = "";
 
-    if (!doc) {
-        alert("Please enter a document.");
-        return;
-    }
+  loadDocuments();
+};
 
-    await fetch(`${API_URL}/add-doc`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ doc })
-    });
+const appendMessage = (type, text) => {
+  const chat = document.getElementById("chat");
+  const message = document.createElement("div");
 
-    documentInput.value = "";
+  message.className = `message ${type}`;
 
-    loadDocuments();
-
-}
-
-function appendMessage(type, text) {
-
-    const message = document.createElement("div");
-
-    message.className = `message ${type}`;
-
-    message.innerHTML = `
+  message.innerHTML = `
         <div class="bubble">${text}</div>
     `;
 
-    chat.appendChild(message);
+  chat.appendChild(message);
 
-    chat.scrollTop = chat.scrollHeight;
+  chat.scrollTop = chat.scrollHeight;
+};
 
-}
+const askQuestion = async () => {
+  const chat = document.getElementById("chat");
+  const questionInput = document.getElementById("question");
+  const question = questionInput.value.trim();
+  if (!question) return;
 
-async function askQuestion() {
+  appendMessage("user", question);
+  questionInput.value = "";
 
-    const question = questionInput.value.trim();
+  appendMessage("bot", "Thinking...");
+  const thinking = chat.lastElementChild;
 
-    if (!question) return;
+  const response = await fetch(`/ask-question`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ question }),
+  });
 
-    appendMessage("user", question);
+  const data = await response.json();
 
-    questionInput.value = "";
+  thinking.remove();
+  appendMessage("bot", data.data);
+};
 
-    appendMessage("bot", "Thinking...");
+globalThis.window.onload = () => {
+  const questionInput = document.getElementById("question");
 
-    const thinking = chat.lastElementChild;
+  document
+    .getElementById("addDocBtn")
+    .addEventListener("click", addDocument);
 
-    const response = await fetch(`${API_URL}/ask-question`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ question })
-    });
+  document
+    .getElementById("askBtn")
+    .addEventListener("click", askQuestion);
 
-    const data = await response.json();
+  questionInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      askQuestion();
+    }
+  });
 
-    thinking.remove();
-
-    appendMessage("bot", data.data);
-
-}
-
-loadDocuments();
+  loadDocuments();
+};
