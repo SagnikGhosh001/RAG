@@ -1,3 +1,37 @@
+const extractPdf = async (file) => {
+  const buffer = await file.arrayBuffer();
+
+  const pdf = await pdfjsLib.getDocument({
+    data: buffer,
+  }).promise;
+
+  let text = "";
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+
+    const content = await page.getTextContent();
+
+    text += content.items.map((item) => item.str).join(" ") + "\n";
+  }
+
+  return text;
+};
+
+const extractDocx = async (file) => {
+  const buffer = await file.arrayBuffer();
+
+  const result = await mammoth.extractRawText({
+    arrayBuffer: buffer,
+  });
+
+  return result.value;
+};
+
+const extractTxt = async (file) => {
+  return await file.text();
+};
+
 const loadDocuments = async () => {
   const chunksContainer = document.getElementById("chunks");
   const response = await fetch(`/get-doc`);
@@ -19,25 +53,59 @@ const loadDocuments = async () => {
   });
 };
 
+const extractFileText = async (file) => {
+  const ext = file.name.split(".").pop().toLowerCase();
+
+  if (ext === "pdf") {
+    return await extractPdf(file);
+  } else if (ext === "docx") {
+    return await extractDocx(file);
+  } else if (ext === "txt") {
+    return await extractTxt(file);
+  }
+  return "";
+};
+
+const extractAllFileText = async (files) => {
+  let finalText = "";
+
+  for (const file of files) {
+    finalText += `\n\n===== ${file.name} =====\n\n`;
+    finalText += await extractFileText(file);
+  }
+
+  return finalText;
+};
+
 const addDocument = async () => {
   const documentInput = document.getElementById("docInput");
   const doc = documentInput.value.trim();
+  const files = document.getElementById("fileInput").files;
+  let text = "";
 
-  if (!doc) {
-    alert("Please enter a document.");
+  console.log(files);
+
+  if (files.length) {
+    text += await extractAllFileText(files);
+  }
+
+  if (!doc && files.length === 0) {
+    alert("Please enter a document or upload a file.");
     return;
   }
 
+  const finalDoc = [doc, text]
+    .filter(Boolean)
+    .join("\n\n");
+
   await fetch(`/add-doc`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ doc }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ doc: finalDoc }),
   });
 
   documentInput.value = "";
-
+  document.getElementById("fileInput").value = "";
   loadDocuments();
 };
 
@@ -84,6 +152,18 @@ const askQuestion = async () => {
 
 globalThis.window.onload = () => {
   const questionInput = document.getElementById("question");
+
+  document.getElementById("uploadBtn").addEventListener("click", () => {
+    document.getElementById("fileInput").click();
+  });
+
+  document.getElementById("fileInput").addEventListener("change", (e) => {
+    const files = [...e.target.files];
+
+    document.getElementById("selectedFiles").innerHTML = files.length === 0
+      ? ""
+      : files.map((file) => `📄 ${file.name}`).join("<br>");
+  });
 
   document
     .getElementById("addDocBtn")

@@ -1,14 +1,26 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RAG Playground</title>
 
-    <link rel="stylesheet" href="./styles.css">
-    <script src="script.js"></script>
+    <link rel="stylesheet" href="./styles.css" />
 
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    </script>
+
+    <!-- DOCX -->
+    <script src="https://cdn.jsdelivr.net/npm/mammoth/mammoth.browser.min.js"></script>
+
+    <!-- Your script -->
+    <script src="script.js" defer></script>
 </head>
+
 <body>
 
 <div class="container">
@@ -22,9 +34,28 @@
             placeholder="Paste your document here..."
         ></textarea>
 
-        <button id="addDocBtn">
-            Add Document
-        </button>
+        <div class="upload-actions">
+
+            <button id="addDocBtn">
+                📄 Add Document
+            </button>
+
+            <button id="uploadBtn" type="button">
+                📂 Choose Files
+            </button>
+
+        </div>
+
+        <input
+            id="fileInput"
+            type="file"
+            accept=".pdf,.docx,.txt"
+            multiple
+            hidden
+        />
+
+        <!-- Optional -->
+        <div id="selectedFiles" class="selected-files"></div>
 
         <h3>Indexed Chunks</h3>
 
@@ -46,7 +77,7 @@
                 id="question"
                 type="text"
                 placeholder="Ask anything..."
-            >
+            />
 
             <button id="askBtn">
                 Ask
@@ -57,7 +88,6 @@
     </main>
 
 </div>
-
 
 </body>
 </html>

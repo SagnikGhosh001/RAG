@@ -150,3 +150,35 @@ body{
 .chat-input button:hover{
     background:#1d4ed8;
 }
+.upload-actions{
+    display:flex;
+    gap:10px;
+}
+
+.upload-actions button{
+    flex:1;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    transition:.2s;
+    font-weight:600;
+}
+
+#addDocBtn{
+    background:#2563eb;
+    color:white;
+}
+
+#addDocBtn:hover{
+    background:#1d4ed8;
+}
+
+#uploadBtn{
+    background:#10b981;
+    color:white;
+}
+
+#uploadBtn:hover{
+    background:#059669;
+}
