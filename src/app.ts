@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { database } from "./store_docs.ts";
+import { database } from "./store.ts";
 import { serveStatic } from "hono/deno";
 import { logger } from "hono/logger";
 import { addDocHandler } from "./addDocHandler.ts";

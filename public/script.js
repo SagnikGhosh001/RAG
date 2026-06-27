@@ -83,8 +83,6 @@ const addDocument = async () => {
   const files = document.getElementById("fileInput").files;
   let text = "";
 
-  console.log(files);
-
   if (files.length) {
     text += await extractAllFileText(files);
   }

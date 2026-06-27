@@ -3,6 +3,7 @@ import { chunkText } from "./chunk.ts";
 import { addDocument, search } from "./db_operations.ts";
 import { buildPrompt } from "./prompt.ts";
 import { chatWithOllama } from "./chat.ts";
+import { messages } from "./store.ts";
 
 export const addDocHandler = async (c: Context) => {
   const payload = await c.req.json();
@@ -20,8 +21,12 @@ export const askQuestionHandler = async (c: Context) => {
   const question = payload.question;
   const searchedResult = await search(question);
   const context = searchedResult.map((s) => s.text);
-
   const finalPrompt = buildPrompt(question, context);
-  const answer = await chatWithOllama(finalPrompt);
+
+  messages.push({ role: "user", content: finalPrompt });
+  console.log(messages);
+
+  const answer = await chatWithOllama(messages);
+
   return c.json({ success: true, data: answer });
 };

@@ -1,5 +1,5 @@
 import { getEmbedding } from "./embedding.ts";
-import { database } from "./store_docs.ts";
+import { database } from "./store.ts";
 
 export const addDocument = async (text: string) => {
   const embedding = await getEmbedding(text);
